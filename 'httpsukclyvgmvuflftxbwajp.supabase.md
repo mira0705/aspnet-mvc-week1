@@ -1,0 +1,1 @@
+'https://ukclyvgmvuflftxbwajp.supabase.co/rest/v1/'**'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrY2x5dmdtdnVmbGZ0eGJ3YWpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0OTMxODUsImV4cCI6MjA5MzA2OTE4NX0.KnnJTneEGWsNs9ig\_D8TXqe1JNsrSg6QJMcgBwCdBGY',****aruzhan@university.kz  my\_password**

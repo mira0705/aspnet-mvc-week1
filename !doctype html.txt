@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Student Hub</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+    * { font-family: 'Plus Jakarta Sans', sans-serif; box-sizing: border-box; }
+    body { background: #000; color: #fff; height: 100vh; overflow: hidden; background-image: radial-gradient(circle at 15% 10%, rgba(94, 92, 230, 0.15), transparent 40%), radial-gradient(circle at 85% 90%, rgba(10, 132, 255, 0.15), transparent 40%); }
+    .glass-card { background: rgba(30, 30, 30, 0.6); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; }
+    .glass-input { width: 100%; padding: 14px; border-radius: 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; outline: none; }
+    .btn-main { width: 100%; padding: 16px; border-radius: 14px; font-weight: 700; background: #fff; color: #000; border: none; cursor: pointer; transition: 0.2s; }
+    .btn-main:hover { transform: scale(0.98); background: #e2e8f0; }
+    .app-card { background: rgba(30,30,30,0.5); backdrop-filter: blur(20px); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.08); }
+    .tab-active { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.1); }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  </style>
+</head>
+<body class="flex flex-col">
+
+<div id="authSection" class="w-full h-full">
+  <div id="loginPage" class="flex items-center justify-center h-full p-5">
+    <div class="glass-card p-10 w-full max-w-[400px]">
+      <h1 class="text-center text-2xl font-bold mb-8">Smart Hub</h1>
+      <form id="loginForm" class="space-y-4">
+        <input type="text" id="loginUsername" class="glass-input" placeholder="Логин" required>
+        <input type="password" id="loginPassword" class="glass-input" placeholder="Құпия сөз" required>
+        <button type="submit" class="btn-main">Кіру</button>
+      </form>
+      <div class="mt-6 text-center text-sm opacity-50">Логин ұмытсаңыз <button onclick="showRecover()" class="text-white underline">осында басыңыз</button></div>
+    </div>
+  </div>
+  <div id="recoverPage" class="hidden flex items-center justify-center h-full p-5">
+    <div class="glass-card p-10 w-full max-w-[400px]">
+      <h2 class="text-xl font-bold mb-4">Қалпына келтіру</h2>
+      <form id="recoverForm" class="space-y-4">
+        <input type="text" id="recFullName" class="glass-input" placeholder="Тіркелген Аты-жөніңіз" required>
+        <input type="password" id="recPassword" class="glass-input" placeholder="Жаңа құпия сөз" required>
+        <button type="submit" class="btn-main">Табу</button>
+      </form>
+      <button onclick="showLogin()" class="mt-4 w-full text-xs opacity-50">Артқа</button>
+    </div>
+  </div>
+</div>
+
+<div id="appSection" class="hidden w-full h-full flex flex-col">
+  <header class="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-black/40 backdrop-blur-xl">
+    <h1 class="font-bold">Smart Hub</h1>
+    <div id="userAvatar" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-sm font-bold cursor-pointer" onclick="logout()"></div>
+  </header>
+
+  <nav class="flex gap-2 px-6 py-4 overflow-x-auto">
+    <button onclick="switchTab('dashboard')" class="tab-active px-5 py-2 rounded-full text-sm font-semibold">Басты бет</button>
+    <button onclick="switchTab('gpa')" class="px-5 py-2 rounded-full text-sm font-semibold opacity-50">GPA</button>
+    <button onclick="switchTab('exam')" class="px-5 py-2 rounded-full text-sm font-semibold opacity-50">Тест (AI)</button>
+  </nav>
+
+  <main class="flex-1 px-6 pb-10 overflow-y-auto">
+    <section id="page-dashboard" class="space-y-4">
+        <div class="app-card">GPA: <span id="statGpa">0.00</span></div>
+    </section>
+
+    <section id="page-gpa" class="hidden space-y-4">
+      <div class="flex justify-between items-center">
+          <h2 class="font-bold text-xl">GPA Калькуляторы</h2>
+          <button onclick="openModal('gpa')" class="bg-indigo-600 px-4 py-2 rounded-xl text-sm">+ Қосу</button>
+      </div>
+      <div id="gpaList" class="space-y-2"></div>
+      <div class="app-card text-center text-4xl font-bold" id="gpaValue">0.00</div>
+    </section>
+
+    <section id="page-exam" class="hidden space-y-4">
+        <h2 class="font-bold text-xl">AI Тест (Файлдан)</h2>
+        <div class="app-card space-y-4">
+            <input type="text" id="q_title" class="glass-input" placeholder="Тест атауы">
+            <textarea id="q_text" class="glass-input h-32" placeholder="Мәтінді осында қойыңыз немесе файл таңдаңыз..."></textarea>
+            <input type="file" id="q_file" accept=".txt" onchange="readF(this)" class="text-sm">
+            <button onclick="genQ()" id="genBtn" class="btn-main">Генерациялау</button>
+        </div>
+        <div id="quizList" class="space-y-2"></div>
+    </section>
+  </main>
+</div>
+
+<div id="modalOverlay" class="modal-overlay hidden"></div>
+
+<script>
+const DB = {
+  async call(e, d) { const r = await fetch(e, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(d)}); return await r.json(); },
+  async verify(u, p) { return this.call('/api/login', {username:u, passwordHash:btoa(p)}); },
+  async getRecs(id) { const r = await this.call('/api/records', {userId:id}); return r.records || []; },
+  async addRec(id, r) { return this.call('/api/record/create', {userId:id, record:r}); },
+  async delRec(id) { return this.call('/api/record/delete', {id:id}); },
+  async genQuiz(id, t, txt) { return this.call('/api/quiz/generate', {userId:id, title:t, text:txt}); },
+  async getQuizzes(id) { const r = await this.call('/api/quizzes', {userId:id}); return r.quizzes || []; }
+};
+
+let currentUser = null, allData = [], allQuizzes = [];
+
+async function initApp(user) {
+  currentUser = user; 
+  allData = await DB.getRecs(user.id);
+  allQuizzes = await DB.getQuizzes(user.id);
+  document.getElementById('authSection').classList.add('hidden');
+  document.getElementById('appSection').classList.remove('hidden');
+  document.getElementById('userAvatar').textContent = user.fullName[0];
+  renderAll();
+}
+
+function showLogin() { document.getElementById('loginPage').classList.remove('hidden'); document.getElementById('recoverPage').classList.add('hidden'); }
+function showRecover() { document.getElementById('loginPage').classList.add('hidden'); document.getElementById('recoverPage').classList.remove('hidden'); }
+function logout() { location.reload(); }
+
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const res = await DB.verify(document.getElementById('loginUsername').value, document.getElementById('loginPassword').value);
+  if (res.ok) initApp(res.user); else alert(res.error);
+});
+
+function switchTab(tab) {
+  document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+  document.getElementById('page-' + tab).classList.remove('hidden');
+  document.querySelectorAll('nav button').forEach(b => b.style.opacity = '0.5');
+  event.target.style.opacity = '1';
+}
+
+function readF(input) {
+  const f = input.files[0]; if(!f) return;
+  const r = new FileReader(); r.onload = e => document.getElementById('q_text').value = e.target.result;
+  r.readAsText(f);
+}
+
+async function genQ() {
+  const btn = document.getElementById('genBtn'); btn.disabled = true; btn.textContent = 'Жасалуда...';
+  const res = await DB.genQuiz(currentUser.id, document.getElementById('q_title').value, document.getElementById('q_text').value);
+  btn.disabled = false; btn.textContent = 'Генерациялау';
+  if(res.ok) { allQuizzes = await DB.getQuizzes(currentUser.id); renderAll(); } else alert(res.error);
+}
+
+const GR_VAL = { 'A': 4.0, 'A-': 3.67, 'B+': 3.33, 'B': 3.0, 'B-': 2.67, 'C+': 2.33, 'C': 2.0, 'C-': 1.67, 'D+': 1.33, 'D': 1.0, 'F': 0 };
+
+function renderAll() {
+  const gpas = allData.filter(d => d.type === 'gpa');
+  let pts = 0, crs = 0;
+  document.getElementById('gpaList').innerHTML = gpas.map(g => {
+    const weight = GR_VAL[g.grade] || 0; pts += weight * g.credits; crs += g.credits;
+    return `<div class="app-card flex justify-between"><div>${g.subject} (${g.credits} кр)</div><div><b>${g.grade}</b></div></div>`;
+  }).join('');
+  const val = crs > 0 ? (pts / crs).toFixed(2) : "0.00";
+  document.getElementById('gpaValue').textContent = val;
+  document.getElementById('statGpa').textContent = val;
+  
+  document.getElementById('quizList').innerHTML = allQuizzes.map(q => `<div class="app-card">${q.title} - ${q.questions.length} сұрақ</div>`).join('');
+}
+
+function openModal(t) {
+  const ov = document.getElementById('modalOverlay'); ov.classList.remove('hidden');
+  if(t==='gpa') {
+    ov.innerHTML = `<div class="modal-box space-y-3">
+      <input id="ms" class="glass-input" placeholder="Пән атауы">
+      <input id="mc" type="number" class="glass-input" placeholder="Кредит саны">
+      <div class="grid grid-cols-3 gap-2">
+        <input id="mr1" type="number" class="glass-input" placeholder="РК1">
+        <input id="mr2" type="number" class="glass-input" placeholder="РК2">
+        <input id="mex" type="number" class="glass-input" placeholder="Экз">
+      </div>
+      <button onclick="saveG()" class="btn-main">Сақтау</button>
+    </div>`;
+  }
+}
+
+async function saveG() {
+  const r1 = parseFloat(document.getElementById('mr1').value)||0, r2 = parseFloat(document.getElementById('mr2').value)||0, ex = parseFloat(document.getElementById('mex').value)||0;
+  const total = ((r1+r2)/2)*0.6 + (ex*0.4);
+  let g = 'F';
+  if(total>=95) g='A'; else if(total>=90) g='A-'; else if(total>=85) g='B+'; else if(total>=80) g='B'; else if(total>=75) g='B-'; else if(total>=70) g='C+'; else if(total>=65) g='C'; else if(total>=60) g='C-'; else if(total>=55) g='D+'; else if(total>=50) g='D';
+  await DB.addRec(currentUser.id, {type:'gpa', subject:document.getElementById('ms').value, grade:g, credits:parseInt(document.getElementById('mc').value)});
+  allData = await DB.getRecs(currentUser.id);
+  document.getElementById('modalOverlay').classList.add('hidden'); renderAll();
+}
+</script>
+</body>
+</html>
